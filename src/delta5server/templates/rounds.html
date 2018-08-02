@@ -1,11 +1,11 @@
 {% extends "layout.html" %} {% block title %}Rounds{% endblock %} {% block head %} {% endblock %} {% block content %}
 
 <!--Display the rounds-->
-{% for heat in rounds.query.with_entities(rounds.heat_id).distinct().order_by(rounds.heat_id) %}
-<h4>Heat {{ heat.heat_id }}</h4>
-{% for round in rounds.query.with_entities(rounds.round_id).distinct().filter_by(heat_id=heat.heat_id).order_by(rounds.round_id)
+{% for round in rounds.query.with_entities(rounds.round_id).distinct().order_by(rounds.round_id) %}
+<h4>Round {{ round.round_id }}</h4>
+{% for heat in rounds.query.with_entities(rounds.heat_id).distinct().filter_by(round_id=round.round_id).order_by(rounds.heat_id)
 %}
-<h5>Round {{ round.round_id }}</h5>
+<h5>Heat {{ heat.heat_id }}</h5>
 <div class="row">
     {% for node in range(num_nodes) %}
     <div class="col-xs-8 col-sm-4 col-md-2">

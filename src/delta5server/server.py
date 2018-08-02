@@ -857,6 +857,9 @@ def pass_record_callback(node, ms_since_lap):
                 node_index=node.index, lap_id=last_lap_id).first().lap_time_stamp
             # New lap time is the difference between the current time stamp and the last
             lap_time = lap_time_stamp - last_lap_time_stamp
+	    if lap_time < 5000: 
+		return
+	
             lap_id = last_lap_id + 1
 
         # Add the new lap to the database

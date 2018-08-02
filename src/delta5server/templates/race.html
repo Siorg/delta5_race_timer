@@ -1,12 +1,23 @@
 {% extends "layout.html" %} {% block title %}Race{% endblock %}{% block head %}
 
 <audio id="buzzer" src="./static/audio/buzzer.mp3" type="audio/mp3"></audio>
+<audio id="beeper" src="./static/audio/beep.mp3" type="audio/mp3"></audio>
 
 <script type="text/javascript" charset="utf-8">
+
+	var GlobalFunctions = {};
 	$(document).ready(function () {
 		var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-
+		var beeper = $('#beeper')[0];
 		var buzzer = $('#buzzer')[0];
+
+		GlobalFunctions.auto_stop = (function (){
+			socket.emit('stop_race');
+		});
+		
+                GlobalFunctions.auto_start = (function (){
+			socket.emit('start_race_2min');
+                });
 
 		socket.on('race_status', function (msg) {
 			switch (msg.race_status) {
@@ -129,7 +140,22 @@
 		});
 
 		$('button#start_race_2min').click(function (event) {
-			socket.emit('start_race_2min');
+			
+			var i = 1;
+			var check = function(){
+    				if(i>2){
+					socket.emit('start_race_2min');// run when conition is met
+				}
+				else {
+			        	i++;
+					beeper.play();
+					setTimeout(check, 3000); // check again in a second
+				}
+			}
+
+			check();
+
+			
 			return false;
 		});
 
@@ -312,9 +338,9 @@
 					<small>{{ channels[node] }} {{ frequencies[node] }}</small>
 				</p>
 				<!-- Comment-out <p></p> above and enable 'button' below to get simulate-lap buttons for debug testing -->
-				<!--
+				
 				<button type="button" class="btn btn-default" id="simulate_lap" data-node="{{ node }}" onclick="this.blur();"><small>{{ channels[node] }} {{ frequencies[node] }}</small></button>
-				-->
+				
 			</div>
 			<table class="table" id="current_laps_{{ node }}">
 				<thead>

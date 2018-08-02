@@ -18,6 +18,8 @@
 
 		var buzzer = $('buzzer')[0]; // Buzzer audio tag is loaded on race page already
 
+		var beep = $('beep')[0];
+
 //		Not needed with new voice options
 //		var countdown_tenseconds = $('countdown_tenseconds')[0];
 //		var callout_thirtyseconds = $('callout_thirtyseconds')[0];
@@ -93,7 +95,13 @@
 	timer = new _timer(
 		function (time) {
 			if (timer.getMode() == 0) { // Count down clock
-				if (time == 0) { buzzer.play(); timer.stop(); } // End up race buzzer
+				if (time == 0) { 
+					buzzer.play(); 
+					GlobalFunctions.auto_stop(); 
+					speak('<div class="timer">Race over! Please land now!</div>');
+					timer.stop(); 
+					
+					} // End up race buzzer
 
 				if (time == 10) {
 					speak('<div class="timer">10 seconds</div>');
@@ -104,6 +112,7 @@
 				}
 
 				if (time == {{fix_race_time}}) { buzzer.play(); } // Start buzzer
+	
 			}
 
 			if (timer.getMode() == 1) { // Count up clock
