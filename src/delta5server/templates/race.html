@@ -1,8 +1,14 @@
 {% extends "layout.html" %} {% block title %}Race{% endblock %}{% block head %}
 
+<audio id="gun" src="./static/audio/gun.mp3" type="audio/mp3"></audio>
 <audio id="buzzer" src="./static/audio/buzzer.mp3" type="audio/mp3"></audio>
 <audio id="beeper" src="./static/audio/beep.mp3" type="audio/mp3"></audio>
-
+<audio id="pass" src="./static/audio/pass_1.mp3" type="audio/mp3"></audio>
+<audio id="pass" src="./static/audio/pass_2.mp3" type="audio/mp3"></audio>
+<audio id="pass" src="./static/audio/pass_3.mp3" type="audio/mp3"></audio>
+<audio id="pass" src="./static/audio/pass_4.mp3" type="audio/mp3"></audio>
+<audio id="pass" src="./static/audio/pass_5.mp3" type="audio/mp3"></audio>
+<audio id="pass" src="./static/audio/pass_6.mp3" type="audio/mp3"></audio>
 <script type="text/javascript" charset="utf-8">
 
 	var GlobalFunctions = {};
@@ -10,6 +16,12 @@
 		var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 		var beeper = $('#beeper')[0];
 		var buzzer = $('#buzzer')[0];
+		var gun = $('#gun')[0];
+		var pass = [6];
+		for(i=0;i<6;i++){
+			pass[i] = $('audio[id="pass"]')[i];
+		}
+
 
 		GlobalFunctions.auto_stop = (function (){
 			socket.emit('stop_race');
@@ -102,8 +114,12 @@
 		});
 
 		socket.on('phonetic_data', function (msg) {
-			var $ttstest = msg.pilot + " lap " + msg.lap + " " + msg.phonetic;
-			speak('<div class="speech">' + $ttstest + '</div> div.speech');				
+			if ($('#sayTimes').is(":checked")){
+				var $ttstest = msg.pilot + " lap " + msg.lap + " " + msg.phonetic;
+				speak('<div class="speech">' + $ttstest + '</div> div.speech');				
+			}else{
+				pass[msg.node_index].play();
+			}
 		})
 
 		socket.on('language_data', function (msg) {
@@ -143,19 +159,18 @@
 			
 			var i = 1;
 			var check = function(){
-    				if(i>2){
+    			if(i>3){
 					socket.emit('start_race_2min');// run when conition is met
 				}
 				else {
-			        	i++;
+			        i++;
 					beeper.play();
 					setTimeout(check, 3000); // check again in a second
 				}
 			}
 
-			check();
+			setTimeout(check, 5000);
 
-			
 			return false;
 		});
 
@@ -274,7 +289,7 @@
 
 <!--Buttons for controlling the race-->
 <div class="row">
-	<div class='col-xs-12'>
+	<div class='col-xs-10'>
 		<div class="btn-group">
 			<button class="btn btn-default dropdown-toggle current_heat" id="current_heat" type="button" data-toggle="dropdown" aria-haspopup="true"
 			 aria-expanded="true">
@@ -292,6 +307,9 @@
 		<button type="button" class="btn btn-default" id="stop_race" disabled="disabled" onclick="this.blur();">Stop Race</button>
 		<button type="button" class="btn btn-default" id="save_laps" disabled="disabled" onclick="this.blur();">Save Laps</button>
 		<button type="button" class="btn btn-default" id="clear_laps" disabled="disabled" onclick="this.blur();">Clear Laps</button>
+	</div>
+	<div class='col-xs-2'>
+			<input class="form-check-input" type="checkbox" value="" id="sayTimes"><label class="form-check-label" for="sayTimes">Say times</label></input>
 	</div>
 </div>
 

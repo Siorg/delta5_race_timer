@@ -17,6 +17,7 @@
 		var timer_id; // Used by setInterval function
 
 		var buzzer = $('buzzer')[0]; // Buzzer audio tag is loaded on race page already
+		var gun = $('gun')[0]; // Buzzer audio tag is loaded on race page already
 
 		var beep = $('beep')[0];
 
@@ -111,7 +112,7 @@
 					speak('<div class="timer">5 seconds</div>');
 				}
 
-				if (time == {{fix_race_time}}) { buzzer.play(); } // Start buzzer
+				if (time == {{fix_race_time}}) { gun.play(); } // Start buzzer
 	
 			}
 

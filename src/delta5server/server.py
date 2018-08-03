@@ -112,6 +112,9 @@ class FixTimeRace(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
     race_time_sec = DB.Column(DB.Integer, nullable=False)
 
+class MinLapTime(DB.Model):
+    id = DB.Column(DB.Integer, primary_key=True)
+    min_lap_time = DB.Column(DB.Integer, nullable=False)
 #
 # Authentication
 #
@@ -221,6 +224,7 @@ def settings():
                            last_profile =  LastProfile,
                            profiles = Profiles,
                            current_fix_race_time=FixTimeRace.query.get(1).race_time_sec,
+                           current_min_lap_time=MinLapTime.query.get(1).min_lap_time,
 						   lang_id=RACE.lang_id)
 
 # Debug Routes
@@ -483,6 +487,14 @@ def on_set_fix_race_time(data):
     fix_race_time.race_time_sec = race_time
     DB.session.commit()
     server_log("set fixed time race to %s seconds" % race_time)
+
+@SOCKET_IO.on("set_min_lap_time")
+def on_set_min_lap_time(data):
+    lap_time = data['lap_time']
+    min_lap_time = MinLapTime.query.get(1)
+    min_lap_time.min_lap_time = lap_time
+    DB.session.commit()
+    server_log("set fixed time race to %s seconds" % lap_time)
 
     # @SOCKET_IO.on('clear_rounds')
 # def on_reset_heats():
@@ -769,11 +781,11 @@ def emit_current_heat():
         'callsign': callsigns
     })
 
-def emit_phonetic_data(pilot_id, lap_id, lap_time):
+def emit_phonetic_data(pilot_id, lap_id, lap_time, node_index):
     '''Emits phonetic data.'''
     phonetic_time = phonetictime_format(lap_time)
     phonetic_name = Pilot.query.filter_by(pilot_id=pilot_id).first().phonetic
-    SOCKET_IO.emit('phonetic_data', {'pilot': phonetic_name, 'lap': lap_id, 'phonetic': phonetic_time})
+    SOCKET_IO.emit('phonetic_data', {'pilot': phonetic_name, 'lap': lap_id, 'phonetic': phonetic_time, 'node_index': node_index})
 
 def emit_language_data():
     '''Emits language.'''
@@ -857,7 +869,7 @@ def pass_record_callback(node, ms_since_lap):
                 node_index=node.index, lap_id=last_lap_id).first().lap_time_stamp
             # New lap time is the difference between the current time stamp and the last
             lap_time = lap_time_stamp - last_lap_time_stamp
-	    if lap_time < 5000: 
+	    if lap_time < MinLapTime.query.get(1).min_lap_time: 
 		return
 	
             lap_id = last_lap_id + 1
@@ -873,7 +885,7 @@ def pass_record_callback(node, ms_since_lap):
         emit_current_laps() # Updates all laps on the race page
         emit_leaderboard() # Updates leaderboard
         if lap_id > 0: 
-            emit_phonetic_data(pilot_id, lap_id, lap_time) # Sends phonetic data to be spoken
+            emit_phonetic_data(pilot_id, lap_id, lap_time, node.index) # Sends phonetic data to be spoken
 
 INTERFACE.pass_record_callback = pass_record_callback
 
@@ -913,6 +925,7 @@ def db_init():
     db_reset_profile()
     db_reset_default_profile()
     db_reset_fix_race_time()
+    db_reset_min_lap_time()
     server_log('Database initialized')
 
 def db_reset():
@@ -925,6 +938,7 @@ def db_reset():
     db_reset_profile()
     db_reset_default_profile()
     db_reset_fix_race_time()
+    db_reset_min_lap_time()
     server_log('Database reset')
 
 def db_reset_keep_pilots():
@@ -934,6 +948,7 @@ def db_reset_keep_pilots():
     db_reset_current_laps()
     db_reset_saved_races()
     db_reset_fix_race_time()
+    db_reset_min_lap_time()
     server_log('Database reset, pilots kept')
 
 def db_reset_pilots():
@@ -1064,6 +1079,12 @@ def db_reset_fix_race_time():
     DB.session.add(FixTimeRace(race_time_sec=120))
     DB.session.commit()
     server_log("Database set fixed time race to 120 sec (2 minutes)")
+
+def db_reset_min_lap_time():
+    DB.session.query(MinLapTime).delete()
+    DB.session.add(MinLapTime(min_lap_time=5000))
+    DB.session.commit()
+    server_log("Database set fixed time race to 5 sec")    
 #
 # Program Initialize
 #

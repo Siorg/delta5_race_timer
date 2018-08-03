@@ -97,6 +97,10 @@
 			$('.set_fix_race_time').val( msg.fix_race_time);
 		});
 
+		socket.on('set_min_lap_time', function (msg) {
+			$('.set_min_lap_time').val( msg.min_lap_time);
+		});
+
 		socket.on('heat_data', function (msg) {
 			$.each(msg.heat_id, function (i, heat_id) {
 				$.each(heat_id.callsign, function (j, callsign) {
@@ -152,7 +156,26 @@
 				pilot_id: parseInt($(this).data('pilot_id')),
 				callsign: $(this).val()
 			};
+
+			
 			socket.emit('set_pilot_callsign', data);
+
+			$('.phonetic_'+parseInt($(this).data('pilot_id'))).val($(this).val());
+			
+			var data = {
+				pilot_id: parseInt($(this).data('pilot_id')),
+				phonetic: $(this).val()
+			};
+
+			socket.emit('set_pilot_phonetic', data);
+
+			$('.name_'+parseInt($(this).data('pilot_id'))).val($(this).val());
+			
+			var data = {
+				pilot_id: parseInt($(this).data('pilot_id')),
+				name: $(this).val()
+			};
+			socket.emit('set_pilot_name', data);
 		})
 
 		$('.set_pilot_phonetic').change(function (event) {
@@ -223,6 +246,14 @@
 			// document.getElementById("heats").innerHTML = // jinja template include
 			return false;
 		});
+		$('button#add_pilot').click(function (event) {
+			socket.emit('add_pilot');
+			window.location.href = "/settings"; // Update to not need page reload
+			// This isn't getting an updated database I think
+			// $( "#heats" ).empty();
+			// document.getElementById("heats").innerHTML = // jinja template include
+			return false;
+		});
 		$('button#speak_pilot').click(function (event) {
 			var data = {
 				pilot_id: parseInt($(this).data('pilot_id')),
@@ -272,6 +303,13 @@
 				race_time: parseInt($(this).val())
 			};
 			socket.emit('set_fix_race_time', data);
+		})
+
+		$('.set_min_lap_time').change(function (event) {
+			var data = {
+				lap_time: parseInt($(this).val())
+			};
+			socket.emit('set_min_lap_time', data);
 		})
 
 	});
@@ -445,6 +483,7 @@
 <!--Pilots list for editing-->
 <h4>Pilots
 	<button type="button" class="btn btn-default" id="add_pilot" onclick="this.blur();">Add Pilot</button>
+	<button type="button" class="btn btn-default" id="copy_pilot" onclick="this.blur();">Copy callsigns</button>
 </h4>
 <p>Spelling corrections only after saving races.</p>
 <div class="row">
@@ -585,6 +624,21 @@
 	</div>
 </div>
 
+<h4> Min lap time</h4>
+<div class="row">
+	<div class='col-xs-16 col-md-8'>
+		<div class='panel panel-default'>
+			<table class="table">
+				<tr>
+					<td><b>Time</b><br> Minimum lap time in miliseconds</td>
+					<td>
+						<input type="text" class="form-control set_min_lap_time" value="{{current_min_lap_time}}">
+					</td>
+				</tr>
+		 </table>
+		</div>
+	</div>
+</div>
 <!--Reset database-->
 <h4>Database (Copy out any saved races first!)</h4>
 <div>
